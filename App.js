@@ -1,12 +1,16 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Alert } from 'react-native';
+import { Provider } from 'react-redux';
 import HomeScreen from './src/screens/Home';
 import LoginScreen from './src/screens/Login';
+import { store } from './src/store';
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
 
 export default function App() {
@@ -52,15 +56,17 @@ export default function App() {
 
   return (
     <>
+      <Provider store={store}>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{
+            headerShown: false
+          }}>
+            <Stack.Screen name='Login' component={LoginScreen} />
+            <Stack.Screen name='Home' component={HomeScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </Provider>
 
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{
-          headerShown: false
-        }}>
-          <Stack.Screen name='Login' component={LoginScreen} />
-          <Stack.Screen name='Home' component={HomeScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
     </>
   );
 }

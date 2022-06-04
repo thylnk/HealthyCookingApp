@@ -7,7 +7,7 @@ export default function LoginScreen({ navigation }) {
 	return (
 		<View style={StyleSheet.container}>
 			<StatusBar style="auto" backgroundColor="#ffff" />
-			<View style={{ marginBottom: 70 }}>
+			<View>
 				<Image source={require('./../../../assets/logo.png')} />
 			</View>
 			<TouchableOpacity
