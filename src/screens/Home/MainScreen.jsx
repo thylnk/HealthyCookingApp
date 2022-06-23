@@ -1,10 +1,13 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { StatusBar } from 'expo-status-bar';
+import { useCallback } from 'react';
 import { useState } from 'react';
 import {
+	ActivityIndicator,
 	Alert,
 	Image,
+	Modal,
 	ScrollView,
 	Text,
 	TextInput,
@@ -25,8 +28,7 @@ export default function MainScreen({ navigation }) {
 	const [calories, setCalories] = useState(0);
 	const [visible, setVisible] = useState(false);
 	const [isReceive, setIsReceive] = useState(true);
-	const [netInfo, setNetInfo] = useState('');
-	const [ipAddress, setIpAddress] = useState('');
+	const [isLoading, setIsLoading] = useState(false);
 	const { pickImageFromCamera, pickImageFromLibrary } = useTakePhoto();
 	let weight = useSelector((state) => state.weight.value) || 0;
 
@@ -40,10 +42,11 @@ export default function MainScreen({ navigation }) {
 	};
 
 	const handlePredict = async () => {
+		setIsLoading(true);
 		try {
 			const body = { data: image?.base64 };
 			const res = await axios.post(
-				'https://flask-api-pbl5.herokuapp.com/api/image/',
+				'http://20.63.142.179/api/image',
 				JSON.stringify(body)
 			);
 			if (res.status === 200) {
@@ -52,7 +55,7 @@ export default function MainScreen({ navigation }) {
 				setName(result);
 				if (result !== 'error') {
 					setName(result);
-					setCalories(weight * calo);
+					onCalculate(calo);
 					setIsModal(true);
 				} else {
 					Alert.alert('LỖI', 'Không thể nhận diện hình ảnh!');
@@ -62,11 +65,32 @@ export default function MainScreen({ navigation }) {
 			console.log(error);
 			Alert.alert('LỖI', 'Đã có lỗi xảy ra, không thể tải dữ liệu từ server!');
 			setIsModal(false);
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
+	const onCalculate = useCallback(
+		(calo) => {
+			setCalories(weight * calo);
+		},
+		[weight]
+	);
+
 	return (
 		<ScrollView style={{ height: '100%' }}>
+			<Modal animationType="fade" transparent={true} visible={isLoading}>
+				<View
+					style={{
+						marginTop: 0,
+						width: '100%',
+						height: '100%',
+						backgroundColor: 'rgba(0,0,0,0.5)',
+						justifyContent: 'center',
+					}}>
+					<ActivityIndicator size={150} color="#FF9A00" />
+				</View>
+			</Modal>
 			<PopupModal
 				isModal={isModal}
 				setIsModal={setIsModal}
@@ -99,9 +123,22 @@ export default function MainScreen({ navigation }) {
 					</View>
 				</View>
 				<View style={{ width: '100%' }}>
-					<Text style={{ marginTop: 10, marginBottom: 16, fontSize: 20 }}>
-						Hình ảnh
-					</Text>
+					<View
+						style={{
+							width: '100%',
+							display: 'flex',
+							flexDirection: 'row',
+							justifyContent: 'space-between',
+							alignItems: 'center',
+							marginBottom: 20,
+							alignSelf: 'center',
+						}}>
+						<Text style={{ marginTop: 10, marginBottom: 16, fontSize: 20 }}>
+							Hình ảnh
+						</Text>
+						<Button text="Chụp ảnh" handleClick={() => setVisible(true)} />
+					</View>
+
 					<View
 						style={{
 							alignSelf: 'center',
@@ -109,10 +146,9 @@ export default function MainScreen({ navigation }) {
 						<Image
 							source={image ? { uri: image?.uri } : defaultImage}
 							style={{
-								width: 320,
-								height: 320,
+								width: 350,
+								height: 350,
 								backgroundColor: '#F5F2ED',
-								// borderRadius: 20,
 								resizeMode: 'contain',
 							}}
 						/>
@@ -124,14 +160,14 @@ export default function MainScreen({ navigation }) {
 								top: 12,
 								zIndex: 1,
 							}}>
-							<TouchableOpacity>
+							{/* <TouchableOpacity>
 								<MaterialCommunityIcons
 									name="dots-vertical"
 									size={24}
 									color={image ? '#f4f4f4' : 'black'}
 									onPress={() => setVisible(true)}
 								/>
-							</TouchableOpacity>
+							</TouchableOpacity> */}
 						</View>
 						<PopupMenu
 							isModal={visible}

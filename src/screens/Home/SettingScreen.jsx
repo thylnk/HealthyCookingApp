@@ -10,36 +10,48 @@ import {
 	View,
 } from 'react-native';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+	selectEsp,
+	selectIP,
+	setConnect,
+	setIP,
+} from '../../services/esp8266.slice';
 import { setWeight } from '../../services/weight.slice';
 
 export default function SettingScreen({ navigation }) {
+	let connected = useSelector((state) => state.esp8266.value) || false;
+	let ip = useSelector((state) => state.esp8266.ip);
 	const dispatch = useDispatch();
-	const [ip, setIp] = useState('');
+	const [currentIp, setCurrentIp] = useState(ip);
 
 	const onClick = async () => {
-		if (!ip) {
+		if (!currentIp) {
 			Alert.alert('LỖI', 'Bạn cần nhập địa chỉ IP!');
 			return;
 		}
+		dispatch(setIP(currentIp));
 		try {
-			const res = await axios.get(`http://${ip}/getWeight`);
-			console.log(res?.data?.weight);
-			const data = res?.data?.weight || 0;
-			if (data) {
-				dispatch(setWeight(res?.data?.weight));
-				setIp('');
+			while (true) {
+				const res = await axios.get(`http://${currentIp}/getWeight`);
+				console.log(res?.data?.weight);
+				const data = res?.data?.weight || 0;
+				if (data) {
+					dispatch(setWeight(res?.data?.weight));
+					dispatch(setConnect(true));
+				}
 			}
 		} catch (err) {
 			Alert.alert(
 				'LỖI',
-				`Đã có lỗi xảy ra, không thể kết nối đến ESP8266 ở địa chỉ ${ip}!`
+				`Đã có lỗi xảy ra, không thể kết nối đến ESP8266 ở địa chỉ ${currentIp}!`
 			);
-			setIp('');
+			dispatch(setConnect(false));
 		}
 	};
+
 	const onReset = async () => {
-		if (ip === '') {
+		if (!ip) {
 			Alert.alert(
 				'LỖI',
 				'Bạn chưa kết nối đến ESP8266 nên không thể hủy kết nối!'
@@ -50,14 +62,23 @@ export default function SettingScreen({ navigation }) {
 			reset: 'true',
 		};
 		try {
-			const res = await axios.post(`http://${ip}/reset`, JSON.stringify(data));
+			const res = await axios.post(
+				`http://${currentIp}/reset`,
+				JSON.stringify(data)
+			);
 			console.log(res.data);
-			setIp('');
+			dispatch(setIP(null));
+			dispatch(setConnect(false));
+			dispatch(setWeight(0));
+			setCurrentIp(null);
+			if (res.data.result === 'success') {
+				Alert.alert('THÔNG BÁO', 'Bạn đã reset wifi cho ESP8266 thành công!');
+			}
 		} catch (err) {
 			console.log(err);
 			Alert.alert(
 				'LỖI',
-				`Đã có lỗi xảy ra, không thể kết nối đến ESP8266 ở địa chỉ ${ip}!`
+				`Đã có lỗi xảy ra, không thể hủy kết nối đến ESP8266 ở địa chỉ ${ip}!`
 			);
 		}
 	};
@@ -82,7 +103,7 @@ export default function SettingScreen({ navigation }) {
 						Địa chỉ IP hiện tại:
 					</Text>
 					<Text style={{ fontSize: 20, paddingBottom: 10 }}>
-						{ip !== '' ? ip : 'Chưa cài đặt'}
+						{connected ? currentIp : 'Chưa cài đặt'}
 					</Text>
 				</View>
 				<View
@@ -100,11 +121,11 @@ export default function SettingScreen({ navigation }) {
 						<TouchableOpacity onPress={onReset}>
 							<View
 								style={{
-									marginVertical: 20,
+									marginVertical: 30,
 									height: 44,
 									alignSelf: 'center',
 									paddingHorizontal: 20,
-									paddingVertical: 10,
+									paddingVertical: 8,
 									backgroundColor: '#FF9A00',
 									borderRadius: 50,
 									shadowOffset: {
@@ -133,9 +154,9 @@ export default function SettingScreen({ navigation }) {
 							color: '#000',
 							borderBottomWidth: 0.2,
 						}}
-						value={ip}
+						value={currentIp}
 						onChangeText={(value) => {
-							setIp(value);
+							setCurrentIp(value);
 						}}
 					/>
 					<TouchableOpacity onPress={onClick}>

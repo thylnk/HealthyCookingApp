@@ -5,7 +5,6 @@ const initialState = {
   status: 'idle',
 };
 
-
 export const weightSlice = createSlice({
   name: 'weight',
   initialState,

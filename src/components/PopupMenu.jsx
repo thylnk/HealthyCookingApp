@@ -31,7 +31,7 @@ export default function PopupMenu(props) {
 			const result = await ImagePicker.launchCameraAsync({
 				mediaTypes: ImagePicker.MediaTypeOptions.All,
 				allowsEditing: true,
-				aspect: [1, 1],
+				aspect: [3, 4],
 				base64: true,
 				quality: 1,
 			});

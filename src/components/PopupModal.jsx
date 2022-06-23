@@ -67,8 +67,8 @@ export default function PopupModal(props) {
 						}}
 					/>
 					<Text style={{ fontSize: 16, marginTop: 10 }}>{name}</Text>
-					<Text style={{ fontSize: 16 }}>Khối lượng: {weight}</Text>
-					<Text style={{ fontSize: 16 }}>Lượng calo: {calories}</Text>
+					<Text style={{ fontSize: 16 }}>Khối lượng: {weight} (gam)</Text>
+					<Text style={{ fontSize: 16 }}>Lượng calo: {calories} (cal)</Text>
 				</View>
 			</View>
 		</Modal>
